@@ -1,0 +1,19 @@
+%table.foremost.sortable
+  %thead
+    %tr
+      %th.sorttable_hex offset
+      %th size
+      %th type
+      %th comment
+  %tbody
+    - @foremost.each do |row|
+      %tr
+        %td= row[2].to_s(16)
+        %td= row[1]
+        %td.type<
+          %span{:class => h(row[0]).to_s.strip.downcase}= h row[0]
+        %td.comment= h row[3]
+        %td.tools<
+          %a.dl
+
+%script(type="text/javascript" src="/js/sorttable.js")

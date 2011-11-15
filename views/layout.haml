@@ -1,0 +1,15 @@
+%head
+  %title= h(@title || "File Analyzer")
+  %meta(http-equiv="Content-Type" content="text/html; charset=utf-8")
+  %link(rel="stylesheet" type="text/css" href="style.css")
+  %link(rel="stylesheet" type="text/css" href="/css/custom-theme/jquery-ui-1.8.16.custom.css")
+  %script(type="text/javascript" src="/js/jquery-1.6.2.min.js")
+  %script(type="text/javascript" src="/js/jquery-ui-1.8.16.custom.min.js")
+%body
+  #header
+    %h1= h(@title || "File Analyzer")
+    %a.root(href="/") /
+    %a.copyright{href: "http://zed.0xff.me"}>©zed_0xff
+  #content
+    = yield
+  #footer

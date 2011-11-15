@@ -1,0 +1,105 @@
+body {
+    font-family: Verdana;
+    font-size: 9pt;
+}
+
+tt, pre, code, pre a {
+    font-family: Monospace;
+}
+
+p.copyright, p.copyright a {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 10pt;
+    text-align: right;
+}
+
+form .comment {
+    font-size: 10pt;
+    color: #ccc;
+}
+
+table.metadata {
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+table.metadata td, table.metadata th {
+    border: solid 1px #ccc;
+    padding: 1px 5px;
+}
+
+table.metadata td.tools {
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    vertical-align: top;
+}
+
+table.metadata td.tools a.dl {
+    display: block;
+    width: 16px; height: 16px;
+    background: url(/download.png) no-repeat;
+    float: left;
+}
+
+table.metadata td.tools a.analyze {
+    display: block;
+    width: 16px; height: 16px;
+    background: url(/magnifier.png) no-repeat;
+    float: left;
+}
+
+#header a.root {
+    text-decoration: none;
+    color: #ccc;
+    font-size: 10pt;
+    position: absolute;
+    top: 2; left: 5;
+}
+
+#header a.copyright {
+    text-decoration: none;
+    color: #ccc;
+    position: absolute;
+    top: 2px; right: 5px;
+}
+
+a.reload {
+    display: block;
+    width: 16px; height: 16px;
+    background: url(/reload.png) no-repeat;
+}
+
+.red {
+    color: red;
+}
+
+/*
+.ui-tabs { position: relative; padding: .2em; zoom: 1; }
+.ui-tabs .ui-tabs-nav { margin: 0; padding: .2em .2em 0; }
+.ui-tabs .ui-tabs-nav li { list-style: none; float: left; position: relative; top: 1px; margin: 0 .2em 1px 0; border-bottom: 0 !important; padding: 0; white-space: nowrap; }
+.ui-tabs .ui-tabs-nav li a { float: left; padding: .5em 1em; text-decoration: none; }
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected { margin-bottom: 0; padding-bottom: 1px; }
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected a, .ui-tabs .ui-tabs-nav li.ui-state-disabled a, .ui-tabs .ui-tabs-nav li.ui-state-processing a { cursor: text; }
+.ui-tabs .ui-tabs-nav li a, .ui-tabs.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-selected a { cursor: pointer; }
+.ui-tabs .ui-tabs-panel { display: block; border-width: 0; padding: 1em 1.4em; background: none; }
+.ui-tabs .ui-tabs-hide { display: none !important; }
+*/
+
+div.histogram {
+    height: 200px;
+    margin: 5px;
+}
+
+div.histogram p {
+    position: relative;
+    float: left;
+    padding: 0;
+    margin: 0;
+    width: 4px;
+    background-color: #555;
+}
+div.histogram p.zero {
+    background-color: #eee;
+}

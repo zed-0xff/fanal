@@ -1,0 +1,41 @@
+--- dir.c.bk	2011-11-07 00:33:21.000000000 +0400
++++ dir.c	2011-11-07 00:34:30.000000000 +0400
+@@ -328,11 +328,11 @@
+ 			strcpy(needle->comment, " ");
+ 
+ 		audit_msg(s,
+-				  "%d:\t%10ld.%s \t %10s \t %10llu \t %s",
++				  "%d:\t%10ld.%s \t %10llu \t %10llu \t %s",
+ 				  s->fileswritten,
+ 				  block,
+ 				  needle->suffix,
+-				  human_readable(len, temp),
++				  len,
+ 				  t_offset,
+ 				  needle->comment);
+ 		s->fileswritten++;
+@@ -388,20 +388,20 @@
+ 		strcpy(needle->comment, " ");
+ 	
+ 	if (i == 1) {
+-      audit_msg(s,"%d:\t%08llu.%s \t %10s \t %10llu \t %s",
++      audit_msg(s,"%d:\t%08llu.%s \t %10llu \t %10llu \t %s",
+          s->fileswritten,
+          block,
+          needle->suffix,
+-         human_readable(len, temp),
++         len,
+          t_offset,
+          needle->comment);
+          } else {
+-      audit_msg(s,"%d:\t%08llu_%d.%s \t %10s \t %10llu \t %s",
++      audit_msg(s,"%d:\t%08llu_%d.%s \t %llu \t %10llu \t %s",
+          s->fileswritten,
+          block,
+          i - 1,
+          needle->suffix, 
+-         human_readable(len, temp),
++         len,
+          t_offset,
+          needle->comment);
+          }

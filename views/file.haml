@@ -1,0 +1,34 @@
+:javascript
+  $(function(){ 
+    $('#tabs').tabs({
+      cache: true,
+      ajaxOptions: {
+              error: function( xhr, status, index, anchor ) {
+                $( anchor.hash ).html(
+                  "<p class=\"red\">Couldn't load this tab. We'll try to fix this as soon as possible.</p>"
+                  )
+              }
+            }
+    }).bind("tabsshow",function(event,ui){
+      window.location.hash = ui.tab.hash;
+    }); 
+  });
+
+#tabs
+  %ul
+    %li
+      %a(href="#info") info
+    %li
+      %a(href="/#{@hash}/hexdump" title="hexdump") hexdump
+    %li
+      %a(href="/#{@hash}/foremost" title="foremost") foremost
+    %li
+      %a(href="/#{@hash}/strings" title="strings") strings
+    %li
+      %a(href="/#{@hash}/strings?sort=1" title="sorted-strings") sorted strings
+
+  #info
+    %a.reload(href="/#{params[:hash]}/analyze" title="Reload")
+    %table.metadata
+      :preserve
+        #{meta_rows}

@@ -1,0 +1,76 @@
+--- main.c.bk	2010-03-02 05:49:30.000000000 +0300
++++ main.c	2011-11-07 01:08:48.000000000 +0400
+@@ -23,6 +23,8 @@
+ int _CRT_fmode = _O_BINARY;
+ #endif
+ 
++static int write_to_fs = 1;
++
+ void catch_alarm(int signum)
+ {
+ 	signal_caught = signum;
+@@ -79,6 +81,9 @@
+ 			"-w  - Only write the audit file, do not write any detected files to the disk %s",
+ 			NEWLINE);
+ 	fprintf(stderr,
++			"-W  - Do not write anything to disk, get audit report on stdout %s",
++			NEWLINE);
++	fprintf(stderr,
+ 			"-o  - set output directory (defaults to %s)%s",
+ 			DEFAULT_OUTPUT_DIRECTORY,
+ 			NEWLINE);
+@@ -101,7 +106,7 @@
+ 	int		i;
+ 	char	*ptr1, *ptr2;
+ 
+-	while ((i = getopt(argc, argv, "o:b:c:t:s:i:k:hqmQTadvVw")) != -1)
++	while ((i = getopt(argc, argv, "o:b:c:t:s:i:k:hqmQTadvVwW")) != -1)
+ 		{
+ 		switch (i)
+ 			{
+@@ -118,6 +123,11 @@
+ 				set_mode(s, mode_write_audit);	/*Only write audit*/
+ 				break;
+ 
++			case 'W':
++				set_mode(s, mode_write_audit);	/*Write nothing*/
++                                write_to_fs = 0;
++				break;
++
+ 			case 'a':
+ 				set_mode(s, mode_write_all);	/*Write all headers*/
+ 				break;
+@@ -253,7 +263,7 @@
+ 		set_search_def(s, "all", 0);
+ 		}
+ 	
+-	if (create_output_directory(s))
++	if (write_to_fs && create_output_directory(s))
+ 		fatal_error(s, "Unable to open output directory");	
+ 
+ 	if (!get_mode(s, mode_write_audit))
+@@ -261,8 +271,13 @@
+ 		create_sub_dirs(s);
+ 		}
+ 
+-	if (open_audit_file(s))
+-		fatal_error(s, "Can't open audit file");
++        if (write_to_fs){
++            if (open_audit_file(s))
++                    fatal_error(s, "Can't open audit file");
++        } else {
++            s->audit_file = fdopen(STDOUT_FILENO,"w");
++            s->audit_file_open = TRUE;
++        }
+ 
+ 	/* Scan for valid files to open */
+ 	while (*argv != NULL)
+@@ -325,7 +340,7 @@
+ 	print_stats(s);
+ 
+ 	/*Lets try to clean up some of the extra sub_dirs*/
+-	cleanup_output(s);
++	if (write_to_fs) cleanup_output(s);
+ 
+ 	if (close_audit_file(s))
+ 		{
