@@ -16,6 +16,7 @@ helpers do
     alias_method :h, :escape_html
 
     include ActionView::Helpers::NumberHelper
+    include LinksHelper
 
     def meta_rows
       keys = @metadata.keys
@@ -256,6 +257,7 @@ def check_part
 
   @metadata = YAML::load_file(File.join(@dname,"metadata.yml")) || {}
   @part_fname = "#{@metadata[:filename]}:#@part_start:#@part_size"
+  @part_fname << '.' << params[:ext] if params[:ext].to_s =~ /\A[a-z0-9]{1,4}\Z/
 end
 
 get '/:hash/dl_part' do
