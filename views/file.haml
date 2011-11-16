@@ -1,5 +1,5 @@
 :javascript
-  $(function(){ 
+  $(function(){
     $('#tabs').tabs({
       cache: true,
       ajaxOptions: {
@@ -9,9 +9,43 @@
                   )
               }
             }
-    }).bind("tabsshow",function(event,ui){
+    }).bind("tabsselect",function(event,ui){
       window.location.hash = ui.tab.hash;
+      if(ui.tab.hash == "#hexdump") load_hexdump();
     }); 
+    if(window.location.hash == "#hexdump") load_hexdump();
+
+    var hexdump_loaded = false;
+    function load_hexdump(){
+      if(hexdump_loaded) return;
+      hexdump_loaded = true;
+
+      $.get("hexdump?raw=1",
+        function(data){
+          ZHexDump.data = data;
+          ZHexDump.dump_to("pre#hexdump_data");
+        }
+      );
+    }
+
+    $(window).keydown(function(ev){
+      if(window.location.hash != "#hexdump") return;
+      var t = (ev.shiftKey?0x2000:0) + ((ev.ctrlKey||ev.altKey)?0x1000:0) + ev.keyCode;
+      switch(t){
+        case 0x1025: // ctrl/alt + left arrow
+          //console.log("c+l");
+          break;
+        case 0x1027: // ctrl/alt + right arrow
+          //console.log("c+r");
+          break;
+        case 0x2025: // shift + left arrow
+          ZHexDump.decrease_width();
+          break;
+        case 0x2027: // shift + right arrow
+          ZHexDump.increase_width();
+          break;
+      }
+    });
   });
 
 #tabs
@@ -19,7 +53,7 @@
     %li
       %a(href="#info") info
     %li
-      %a(href="/#{@hash}/hexdump" title="hexdump") hexdump
+      %a(href="#hexdump") hexdump
     %li
       %a(href="/#{@hash}/foremost" title="foremost") foremost
     %li
@@ -32,3 +66,5 @@
     %table.metadata
       :preserve
         #{meta_rows}
+  #hexdump
+    %pre#hexdump_data

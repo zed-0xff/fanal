@@ -17,6 +17,7 @@ helpers do
 
     include ActionView::Helpers::NumberHelper
     include LinksHelper
+    include HexdumpHelper
 
     def meta_rows
       keys = @metadata.keys
@@ -33,22 +34,19 @@ helpers do
 
     def meta_row k,v=nil
       v ||= @metadata[k]
-      need_pre = true
       hv = case v
         when Fixnum
           "%d (0x%x)" % [v,v]
         when Hash
           if k == :data_past_eof
-            "%d (0x%x) bytes:\n\n%s" % [v[:size], v[:size], h(v[:dump])]
+            "<pre>%d (0x%x) bytes:\n\n%s</pre>" % [v[:size], v[:size], h(v[:dump])]
           else
             h(v.inspect)
           end
         when Array
           if k == :histogram
-            need_pre = false
             Histogram.new(v).to_html
           elsif k == :foremost
-            need_pre = false
             t = '<table class=metadata>'
             t << v.sort_by{|x| x[2]}.map do |row|
               '<tr><td>' + row.join('</td><td>') + '</td></tr>'
@@ -63,7 +61,6 @@ helpers do
 
       style = RED_ROWS.include?(k.to_s)? ' class="red"' : ''
       r = "<tr><th#{style}>#{h(k)}</th><td#{style}>#{hv}</td>"
-      #r << (need_pre ? "<pre>#{hv}</pre></td>" : "#{hv}</td>")
 
       case k.to_s
       when 'filename'
@@ -81,28 +78,6 @@ helpers do
 
       r << "</tr>"
     end
-end
-
-def hexdump data, h = {}
-  offset = h[:offset] || 0
-  add    = h[:add]    || 0
-  size   = h[:size]   || (data.size-offset)
-  tail   = h[:tail]   || "\n"
-
-  s = "%08x: " % (offset + add)
-  ascii = ''
-  size.times do |i|
-    s << " " if i%8==0
-    if i%16==0 && i>0
-      s << "|%s|\n%08x:  " % [ascii, offset + add + i]
-      ascii = ''
-    end
-    c = data[offset+i].ord
-    s << "%02x " % c
-    ascii << ((32..126).include?(c) ? c.chr : '.')
-  end
-  s << '   '*(0x10-size%0x10)
-  "%s |%-16s|%s" % [s, ascii, tail]
 end
 
 ###############################################
@@ -183,6 +158,10 @@ def check_hash
 end
 
 get '/:hash' do
+  redirect "/#{params[:hash]}/"
+end
+
+get '/:hash/' do
   check_hash
 
   @metadata = YAML::load_file(File.join(@dname,"metadata.yml")) || {}
@@ -240,8 +219,18 @@ end
 
 get '/:hash/hexdump' do
   check_hash
-  data = File.read(@fname,100_000)
-  "<pre>" + h(hexdump(data)) + (data.size==100_000 ? "\n..." : "") + "</pre>"
+  @data  = File.read(@fname,0x20000)
+  @fsize = File.size(@fname)
+  if params[:raw]
+    headers 'Content-Type' => 'text/plain; charset=x-user-defined'
+    halt @data
+  end
+  hparams = {}
+  %w'width'.each do |p|
+    hparams[p.to_sym] = params[p].to_i if params[p]
+  end
+  @dump  = hexdump(@data, hparams) + (@data.size < @fsize ? "\n..." : "")
+  haml :hexdump, :layout => false
 end
 
 def check_part
