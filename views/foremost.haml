@@ -14,6 +14,7 @@
           %span{:class => h(row[0]).strip.downcase}= h row[0]
         %td.comment= h row[3]
         %td.tools<
-          %a.dl{ :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
+          %a.dl{ :title => "download", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
+          %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},#{row[1]})" }
 
 %script(type="text/javascript" src="/js/sorttable.js")

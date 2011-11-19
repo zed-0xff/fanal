@@ -2,8 +2,8 @@
 require 'sinatra'
 require 'digest/md5'
 require 'yaml'
-#require 'active_support/core_ext'
-#require 'action_view/helpers/number_helper'
+require 'net/http'
+
 Dir['./lib/*.rb'].each{ |x| require x }
 
 DATA_DIR = "data"
@@ -71,6 +71,7 @@ helpers do
         r << '<td class="tools">'
         r << %Q|<a href="/#{params[:hash]}/dl_part?start=#{v[:start].to_i}&size=#{v[:size].to_i}" title="Download" class="dl"></a>|
         r << %Q|<a href="/#{params[:hash]}/analyze_part?start=#{v[:start].to_i}&size=#{v[:size].to_i}" title="Analyze" class="analyze"></a>|
+        r << %Q|<a onclick="show_in_hexdump(#{v[:start].to_i},#{v[:size].to_i})" title="show in hexdump" class="hex"></a>|
         r << '</td>'
       when 'parent'
         r.sub! hv, %Q|<a href="/#{hv}">#{@metadata[:filename].split(':',2).first}</a>|
@@ -96,8 +97,26 @@ get '/style.css' do
 end
 
 post '/' do
-  tempfile = @tempfile.is_a?(File) ? @tempfile : @params[:file][:tempfile]
-  return 'no file' unless tempfile
+  tempfile = @tempfile.is_a?(File) ? @tempfile : (@params[:file] && @params[:file][:tempfile])
+  unless tempfile
+    url = params[:url].to_s.strip
+    halt 400, "Error: no file" if url.empty?
+    tempfile = Tempfile.new('anal')
+
+    @part_fname = File.basename(url)
+
+    uri = URI(url)
+    Net::HTTP.start(uri.host, uri.port) do |http|
+      request = Net::HTTP::Get.new uri.request_uri
+
+      http.request request do |response|
+        response.read_body do |chunk|
+          tempfile.write chunk
+        end
+      end
+    end
+    tempfile.rewind
+  end
 
   begin
     dig = Digest::MD5.new
@@ -211,6 +230,15 @@ get '/:hash/foremost' do
   check_hash
 
   if (@foremost = Foremost.scan(@fname, :cache_file => File.join(@dname,"foremost.yml"))).any?
+    last = @foremost.sort_by{ |x| x[2] }.last
+    if last[2] + last[1] < File.size(@fname)
+      @foremost << [
+        "BIN",
+        File.size(@fname) - last[1] - last[2],
+        last[1] + last[2],
+        "data past eof"
+      ]
+    end
     haml :foremost, :layout => false
   else
     "Nothing found"
@@ -219,7 +247,15 @@ end
 
 get '/:hash/hexdump' do
   check_hash
-  @data  = File.read(@fname,0x20000)
+
+  @offset = params[:offset].to_i; @offset = 0 if @offset < 0
+  @size   = params[:size].to_i; @size = 0x20000 if @size <= 0
+
+  File.open(@fname) do |f|
+    f.seek @offset
+    @data = f.read(@size)
+  end
+
   @fsize = File.size(@fname)
   if params[:raw]
     headers 'Content-Type' => 'text/plain; charset=x-user-defined'
@@ -229,7 +265,7 @@ get '/:hash/hexdump' do
   %w'width'.each do |p|
     hparams[p.to_sym] = params[p].to_i if params[p]
   end
-  @dump  = hexdump(@data, hparams) + (@data.size < @fsize ? "\n..." : "")
+  @dump  = hexdump(@data, hparams) + (@data.size+@offset < @fsize ? "\n..." : "")
   haml :hexdump, :layout => false
 end
 

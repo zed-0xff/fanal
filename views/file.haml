@@ -15,47 +15,98 @@
     }); 
     if(window.location.hash == "#hexdump") load_hexdump();
 
-    var hexdump_loaded = false;
     function load_hexdump(){
-      if(hexdump_loaded) return;
-      hexdump_loaded = true;
-
-      $.get("hexdump?raw=1",
-        function(data){
-          ZHexDump.data = data;
-          ZHexDump.dump_to("pre#hexdump_data");
-        }
-      );
+      if(ZHexDump.data) return;
+      ZHexDump.data = "foo";    // kind of flag
+      ZHexDump.load();
     }
 
     $(window).keydown(function(ev){
       if(window.location.hash != "#hexdump") return;
       var t = (ev.shiftKey?0x2000:0) + ((ev.ctrlKey||ev.altKey)?0x1000:0) + ev.keyCode;
       switch(t){
-        case 0x1025: // ctrl/alt + left arrow
-          //console.log("c+l");
+        case 0x1025:                  // ctrl/alt + left arrow
           break;
-        case 0x1027: // ctrl/alt + right arrow
-          //console.log("c+r");
-          break;
-        case 0x2025: // shift + left arrow
+        case 0x1027:                  // ctrl/alt + right arrow
+          break;A
+        case 0xbd:                    // '-'
+        case 0x2025:                  // shift + left arrow
           ZHexDump.decrease_width();
           break;
-        case 0x2027: // shift + right arrow
+        case 0xbb:                    // '='
+        case 0x2027:                  // shift + right arrow
           ZHexDump.increase_width();
           break;
+        case 0xbc:                    // ','
+        case 0x20bc:                  // '<'
+          if(ZHexDump.offset>0){
+            ZHexDump.offset--;
+            ZHexDump.load();
+          }
+          break;
+        case 0xbe:                    // '.'
+        case 0x20be:                  // '>'
+          ZHexDump.offset++;
+          ZHexDump.load();
+          break;
+        case 0xdb:                    // [
+        case 0x20db:                  // {
+          if(ZHexDump.offset>0){
+            ZHexDump.offset -= ZHexDump.pagesize;
+            if(ZHexDump.offset<0) ZHexDump.offset = 0;
+            ZHexDump.load();
+          }
+          break;
+        case 0xdd:                    // ]
+        case 0x20dd:                  // }
+          if(ZHexDump.data.length == ZHexDump.pagesize){
+            ZHexDump.offset += ZHexDump.pagesize;
+            ZHexDump.load();
+          }
+          break;
+        default: console.log("0x"+t.toString(16)); break;
       }
     });
+
+    $('span[contentEditable]').keydown(function(e){
+      var isHex = ( this.className.indexOf('_hex') != -1 );
+      if( e.keyCode >= 0x30 && e.keyCode <= 0x39) return true; // 0..9
+      if( isHex ) {
+        if( e.keyCode >= 0x41 && e.keyCode <= 0x46) return true; // A..F
+      }
+      if( e.keyCode == 13 ){ // enter
+        this.blur();
+        if( this.className.indexOf('offset') != -1 ){
+          ZHexDump.offset = parseInt(this.innerText, isHex?16:10);
+        }
+        if( this.className.indexOf('size') != -1 ){
+          ZHexDump.size   = parseInt(this.innerText, isHex?16:10);
+          ZHexDump.pagesize = ZHexDump.size;
+        }
+        ZHexDump.load();
+      }
+      if( e.keyCode == 27 ){ // escape
+        this.blur();
+        ZHexDump.update_labels();
+      }
+      return (e.keyCode < 0x30); // left, right, home, end, del, etc
+    });
   });
+
+  function show_in_hexdump(offset,size){
+    ZHexDump.load(offset,size);
+    $('#tabs').tabs('select','#hexdump');
+    $(window).scrollTop(0);
+  }
 
 #tabs
   %ul
     %li
       %a(href="#info") info
     %li
-      %a(href="#hexdump") hexdump
-    %li
       %a(href="/#{@hash}/foremost" title="foremost") foremost
+    %li
+      %a(href="#hexdump") hexdump
     %li
       %a(href="/#{@hash}/strings" title="strings") strings
     %li
@@ -66,5 +117,18 @@
     %table.metadata
       :preserve
         #{meta_rows}
+
   #hexdump
+    .info
+      offset:
+      %span.offset(contentEditable='true')
+      ( 0x
+      %span.offset_hex(contentEditable='true')>
+      &nbsp;)
+      %span(style="position:absolute; left: 18em")
+        size:
+        %span.size(contentEditable='true')
+        ( 0x
+        %span.size_hex(contentEditable='true')>
+        &nbsp;)
     %pre#hexdump_data

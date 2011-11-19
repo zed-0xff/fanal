@@ -6,19 +6,28 @@ module HexdumpHelper
     tail   = h[:tail]   || "\n"
     width  = h[:width]  || 0x10                 # row width, in bytes
 
-    s = "%08x: " % (offset + add)
+    size = data.size-offset if size+offset > data.size
+
+    r = ''; s = ''
+    r << "%08x: " % (offset + add)
     ascii = ''
     size.times do |i|
-      s << " " if i%width%8==0
       if i%width==0 && i>0
-        s << "|%s|\n%08x:  " % [ascii, offset + add + i]
-        ascii = ''
+        r << "%s |%s|\n%08x: " % [s, ascii, offset + add + i]
+        ascii = ''; s = ''
       end
+      s << " " if i%width%8==0
       c = data[offset+i].ord
       s << "%02x " % c
       ascii << ((32..126).include?(c) ? c.chr : '.')
     end
-    s << '   '*(width-size%width) if size%width > 0
-    "%s |%-*s|%s" % [s, width, ascii, tail]
+    r << "%-*s |%-*s|%s" % [width*3+width/8, s, width, ascii, tail]
+  end
+end
+
+if $0 == __FILE__
+  include HexdumpHelper
+  (0..0x22).each do |n|
+    puts hexdump("X"*n, :tail => " 0x%02x" % n)
   end
 end

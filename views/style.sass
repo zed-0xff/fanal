@@ -37,18 +37,25 @@ table.metadata
     border-bottom: none
     vertical-align: top
 
+a.toolbutton
+  display: block
+  width: 16px
+  height: 16px
+  float: left
+  opacity: 0.2
+  cursor: pointer
 a.dl
-  display: block
-  width: 16px
-  height: 16px
+  @extend a.toolbutton
   background: url(/download.png) no-repeat
-  float: left
 a.analyze
-  display: block
-  width: 16px
-  height: 16px
+  @extend a.toolbutton
   background: url(/magnifier.png) no-repeat
-  float: left
+a.hex
+  @extend a.toolbutton
+  background: url(/hex.gif) no-repeat
+
+a.toolbutton:hover
+  opacity: 1
 
 table.foremost
   @extend table.metadata
@@ -75,7 +82,7 @@ table.foremost
     padding-left: 10px
     border: none
     vertical-align: top
-    opacity: 0.2
+//    opacity: 0.2
     &:hover
       opacity: 1
 
@@ -119,3 +126,8 @@ div.histogram
 table.sortable
   th
     cursor: pointer
+
+#hexdump .info 
+  color: #bbb
+  span[contentEditable]:hover
+    background-color: yellow

@@ -15,10 +15,10 @@ class Foremost
       r = `foremost -W #@fname`.force_encoding('binary').scan(
         /^\d+:[ \t]+\d+\.([^ \t]*)[ \t]+(\d+)[ \t]+(\d+)[ \t]*(.*)$/
       ).map do |row|
-        row[0].upcase!
-        row[1] = row[1].to_i
-        row[2] = row[2].to_i
-        row.last.strip!
+        row[0].upcase!        # type
+        row[1] = row[1].to_i  # size
+        row[2] = row[2].to_i  # offset
+        row.last.strip!       # comment
         row.pop if row.last == ""
         row
       end.sort_by{ |row| row[2] }
