@@ -5,7 +5,7 @@
  
  		audit_msg(s,
 -				  "%d:\t%10ld.%s \t %10s \t %10llu \t %s",
-+				  "%d:\t%10ld.%s \t %10llu \t %10llu \t %s",
++				  "%d:\t%10llu.%s \t %10llu \t %10llu \t %s",
  				  s->fileswritten,
  				  block,
  				  needle->suffix,
