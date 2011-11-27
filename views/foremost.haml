@@ -1,3 +1,7 @@
+.info
+  %input#show_previews(type="checkbox" onclick="toggle_previews(this)")
+  %label(for="show_previews") show previews
+
 %table.foremost.sortable
   %thead
     %tr
@@ -17,4 +21,42 @@
           %a.dl{ :title => "download", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
           %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},#{row[1]})" }
 
+#previews
+  -# @foremost.find_all{|x| @image_types.include?(x[0])}.each do |row|
+    .thumb
+      %img{ |
+        :src   => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase), |
+        :title => "#{row[2].to_s(16)}-#{row[1]}.#{row[0].downcase}", |
+        :alt   => "#{row[2].to_s(16)}-#{row[1]}.#{row[0].downcase}" |
+      } |
+
 %script(type="text/javascript" src="/js/sorttable.js")
+
+:javascript
+  var image_types = #{@image_types.to_json};
+  var previews_loaded = false;
+  var foremost_data = #{@foremost.to_json};
+  var url_tpl = #{url_for(params[:hash], :dl_part, :start => 'START', :size => 'SIZE', 
+    :ext => 'EXT', :inline => 1).to_json};
+  var row;
+  function toggle_previews(chk){
+    if(chk.checked){
+      previews_loaded = true;
+      var html = "",alt,url;
+      for(var i=0; i<foremost_data.length; i++){
+        row = foremost_data[i];
+        if(image_types.indexOf(row[0]) == -1) continue;
+        alt = row[2].toString(16) + "-" + row[1] + "." + row[0].toLowerCase();
+        if(row[3]) alt+= " " + row[3];
+        url = url_tpl.
+            replace('START',row[2]).
+            replace('SIZE', row[1]).
+            replace('EXT',  row[0].toLowerCase());
+        html += "<div class=\"thumb\" title=\""+alt+"\"><div><a target=\"_blank\" href=\""+url+
+          "\"><img src=\""+url+"\" alt=\""+alt+"\"/></a></div></div>";
+      }
+      $('#previews').html(html).width($('#foremost').width() - $('table.foremost').width() - 50).show();
+    } else {
+      $('#previews').hide();
+    }
+  }

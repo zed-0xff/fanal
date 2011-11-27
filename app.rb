@@ -2,7 +2,9 @@
 require 'sinatra'
 require 'digest/md5'
 require 'yaml'
+require 'json'
 require 'net/http'
+require 'mime/types'
 
 Dir['./lib/*.rb'].each{ |x| require x }
 
@@ -239,6 +241,7 @@ get '/:hash/foremost' do
         "data past eof"
       ]
     end
+    @image_types = %w'JPG GIF PNG BMP ICO PCX TIF TIFF'
     haml :foremost, :layout => false
   else
     "Nothing found"
@@ -288,8 +291,9 @@ end
 get '/:hash/dl_part' do
   check_part
   headers \
-    "Content-Disposition" => %Q|attachment; filename="#@part_fname"|,
-    "Content-Length"      => @part_size.to_s
+    "Content-Disposition" => (params[:inline] ? "inline" : %Q|attachment; filename="#@part_fname"|),
+    "Content-Length"      => @part_size.to_s,
+    "Content-Type"        => (MIME::Types.of(@part_fname).first || "application/octet-stream").to_s
 
   stream do |out|
     File.open(@fname,"rb") do |f|

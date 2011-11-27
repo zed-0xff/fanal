@@ -57,34 +57,58 @@ a.hex
 a.toolbutton:hover
   opacity: 1
 
-table.foremost
-  @extend table.metadata
-  td, th
-    text-align: right
-    font-family: Monospace
-  th
-    text-align: center
-  td.type
-    text-align: center
-    font-family: Verdana
-    font-weight: bold
-    font-size: 10pt
-    .gif, .jpg, .png, .bmp
-      color: #0b0
-  td.comment
-    color: #ccc
-    padding-left: 1em
-    border-right: none
-    border-top: none
-    border-bottom: none
-    text-align: center
-  td.tools
-    padding-left: 10px
-    border: none
-    vertical-align: top
-//    opacity: 0.2
-    &:hover
-      opacity: 1
+#foremost
+  .info
+    -webkit-user-select: none
+    -khtml-user-select: none
+    -moz-user-select: none
+    -o-user-select: none
+    user-select: none
+  table.foremost
+    @extend table.metadata
+    float: left
+    margin-right: 50px
+    td, th
+      text-align: right
+      font-family: Monospace
+    th
+      text-align: center
+    td.type
+      text-align: center
+      font-family: Verdana
+      font-weight: bold
+      font-size: 10pt
+      .gif, .jpg, .png, .bmp
+        color: #0b0
+    td.comment
+      color: #ccc
+      padding-left: 1em
+      border-right: none
+      border-top: none
+      border-bottom: none
+      text-align: center
+    td.tools
+      padding-left: 10px
+      border: none
+      vertical-align: top
+  #previews
+    display: none
+    float: left
+    .thumb
+      float: left
+      width: 100px
+      height: 100px
+      border: solid 1px #ddd
+      margin: 1px
+      div
+        width: 100px
+        height: 100px
+        display: table-cell
+        vertical-align: middle
+        text-align: center
+        img
+          max-width: 100px
+          max-height: 100px
 
 #header a
   &.root
@@ -131,3 +155,12 @@ table.sortable
   color: #bbb
   span[contentEditable]:hover
     background-color: yellow
+
+input[type=checkbox], label
+  cursor: pointer
+  -webkit-user-select: none
+  -khtml-user-select: none
+  -moz-user-select: none
+  -o-user-select: none
+  user-select: none
+
