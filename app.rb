@@ -291,7 +291,7 @@ end
 get '/:hash/dl_part' do
   check_part
   headers \
-    "Content-Disposition" => (params[:inline] ? "inline" : %Q|attachment; filename="#@part_fname"|),
+    "Content-Disposition" => (params[:inline] ? "inline" : "attachment") + %Q|; filename="#@part_fname"|,
     "Content-Length"      => @part_size.to_s,
     "Content-Type"        => (MIME::Types.of(@part_fname).first || "application/octet-stream").to_s
 

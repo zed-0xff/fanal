@@ -20,6 +20,7 @@
         %td.tools<
           %a.dl{ :title => "download", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
           %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},#{row[1]})" }
+          %a.open{ :title => "open", :target => "_blank", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase, :inline => 1) } #
 
 #previews
   -# @foremost.find_all{|x| @image_types.include?(x[0])}.each do |row|
