@@ -11,6 +11,25 @@ namespace :metadata do
       end
     end
   end
+
+  desc "fix borken metadatas"
+  task :fix do
+    require 'digest/md5'
+    Dir[File.join('data','?'*32,'data')].each do |dname|
+      mname = File.join(File.dirname(dname), "metadata.yml")
+      metadata = YAML::load_file(mname) || {}
+
+      size = File.size(dname)
+      md5  = Digest::MD5.file(dname).hexdigest
+
+      if metadata[:md5] != md5 || metadata[:size] != size
+        metadata[:md5]  = md5
+        metadata[:size] = size
+        File.open(mname,"w"){ |f| f << metadata.to_yaml }
+        puts "[*] fixed: #{mname}"
+      end
+    end
+  end
 end
 
 desc "deploy to server"

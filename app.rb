@@ -5,11 +5,13 @@ require 'yaml'
 require 'json'
 require 'net/http'
 require 'mime/types'
+require 'zipruby'
 
 Dir['./lib/*.rb'].each{ |x| require x }
 
 DATA_DIR = "data"
 RED_ROWS = %w'data_past_eof'
+BUFSIZE  = 16384
 
 ###############################################
 
@@ -20,6 +22,7 @@ helpers do
     include ActionView::Helpers::NumberHelper
     include LinksHelper
     include HexdumpHelper
+    include UnzipHelper
 
     def meta_rows
       keys = @metadata.keys
@@ -76,7 +79,9 @@ helpers do
         r << %Q|<a onclick="show_in_hexdump(#{v[:start].to_i},#{v[:size].to_i})" title="show in hexdump" class="hex"></a>|
         r << '</td>'
       when 'parent'
-        r.sub! hv, %Q|<a href="/#{hv}">#{@metadata[:filename].split(':',2).first}</a>|
+        raise unless hv =~ /\A[0-9a-f]{32}\Z/
+        m = YAML::load_file(File.join("data",hv,"metadata.yml"))
+        r.sub! hv, %Q|<a href="/#{hv}">#{m[:filename] || @metadata[:filename].split(':',2).first}</a>|
       end
 
       r << "</tr>"
@@ -99,8 +104,14 @@ get '/style.css' do
 end
 
 post '/' do
-  tempfile = @tempfile.is_a?(File) ? @tempfile : (@params[:file] && @params[:file][:tempfile])
-  unless tempfile
+  tempfile =
+    if @tempfile.respond_to?(:read) && @tempfile.respond_to?(:size)
+      @tempfile
+    else
+      @params[:file] && @params[:file][:tempfile]
+    end
+
+  if !tempfile && params[:url]
     url = params[:url].to_s.strip
     halt 400, "Error: no file" if url.empty?
     tempfile = Tempfile.new('anal')
@@ -121,14 +132,17 @@ post '/' do
   end
 
   begin
-    dig = Digest::MD5.new
-    buf = ""
-    sz = @part_size || tempfile.size
-    while sz > 0
-      dig.update(tempfile.read([sz,16384].min))
-      sz -= 16384
-    end
-    md5 = dig.hexdigest
+    md5 = @part_hash ||
+      begin
+        dig = Digest::MD5.new
+        buf = ""
+        sz = @part_size || tempfile.size
+        while sz > 0
+          dig.update(tempfile.read([sz,BUFSIZE].min))
+          sz -= BUFSIZE
+        end
+        dig.hexdigest
+      end
 
     dname = File.join(DATA_DIR,md5)
     fname = File.join(dname,"data")
@@ -143,22 +157,24 @@ post '/' do
 
     if @part_start && @part_size
       # analyzing a part of other file
-      sz = @part_size
-      tempfile.seek @part_start
-      File.open(fname,"wb") do |f|
-        while sz > 0
-          f.write(tempfile.read([sz,16384].min))
-          sz -= 16384
+      File.copy_stream tempfile, fname, @part_size, @part_start
+    elsif tempfile.respond_to?(:path)
+      # http uploaded file
+      FileUtils.cp tempfile.path, fname
+    else
+      # unzipping
+      # can't use File.copy_stream here b/c Zip::File do not have File.read(size, block)
+      File.open(fname,"wb") do |fo|
+        while chunk = tempfile.read(BUFSIZE)
+          fo.write(chunk)
         end
       end
-    else
-      FileUtils.cp tempfile.path, fname
     end
 
     File.open(File.join(dname,"metadata.yml"),"w") do |f|
       f << {
         :filename => @part_fname || @params[:file][:filename],
-        :size     => @part_size  || File.size(tempfile.path),
+        :size     => @part_size  || tempfile.size,
         :md5      => md5
       }.merge(@hash ? {:parent => @hash} : {}).to_yaml
     end
@@ -309,11 +325,51 @@ end
 get '/:hash/analyze_part' do
   check_part
 
-  dig = Digest::MD5.new
-
   @tempfile = File.open(@fname,"rb")
   @tempfile.seek @part_start
 
   # call POST on '/'
   call! env.merge("PATH_INFO" => "/", "REQUEST_METHOD" => "POST")
+end
+
+get '/:hash/unzip' do
+  check_hash
+  @files  = []
+  @fields = %w'name size comp_method comp_size crc index mtime encryption_method comment'
+  FStruct = Struct.new(*@fields.map(&:to_sym))
+  begin
+    Zip::Archive.open(@fname) do |ar|
+      ar.each do |f|
+        @files << (fs=FStruct.new(f.name, f.size))
+        @fields.each do |field|
+          fs.send "#{field}=", f.send(field)
+        end
+      end
+    end
+  rescue Zip::Error
+    r = "<div style='color:red'>Zip::Archive Error: " + h($!.to_s) + "</div>"
+    r << "<pre>"
+    r << `unzip -lv #@fname 2>&1`
+    r << "</pre>"
+    halt r
+  end
+  haml :unzip, :layout => !request.xhr?
+end
+
+get '/:hash/unzip/:id/analyze' do
+  check_hash
+  Zip::Archive.open(@fname) do |ar|
+    ar.fopen(params[:id].to_i) do |f|
+      dig = Digest::MD5.new
+      f.read{ |chunk| dig.update(chunk) }
+      @part_hash = dig.hexdigest
+    end
+    f = ar.fopen(params[:id].to_i)
+    @tempfile = f
+    @part_fname = f.name
+    # call POST on '/'
+    call! env.merge("PATH_INFO" => "/", "REQUEST_METHOD" => "POST")
+    f.close rescue nil
+  end
+  halt "OK"
 end

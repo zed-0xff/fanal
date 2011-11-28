@@ -1,3 +1,10 @@
+@mixin no-select
+  -webkit-user-select: none
+  -khtml-user-select: none
+  -moz-user-select: none
+  -o-user-select: none
+  user-select: none
+
 body
   font-family: Verdana
   font-size: 9pt
@@ -42,14 +49,23 @@ a.toolbutton
   width: 16px
   height: 16px
   float: left
-  opacity: 0.2
+  opacity: 0.3
   cursor: pointer
+  &:hover
+    opacity: 1
+
 a.dl
   @extend a.toolbutton
   background: url(/download.png) no-repeat
 a.analyze
   @extend a.toolbutton
-  background: url(/magnifier.png) no-repeat
+  opacity: 1
+  background: url(/magnifier2.png) no-repeat
+  background-color: #ccc
+  &:visited
+    background-color: #c5c
+  &:hover
+    background-color: #000
 a.hex
   @extend a.toolbutton
   background: url(/hex.gif) no-repeat
@@ -57,9 +73,9 @@ a.open
   @extend a.toolbutton
   text-align: center
   text-decoration: none
-
-a.toolbutton:hover
-  opacity: 1
+  &:visited
+    color: #cc009c
+    opacity: 0.8
 
 #foremost
   .info
@@ -114,6 +130,13 @@ a.toolbutton:hover
           max-width: 100px
           max-height: 100px
 
+table.unzip
+  @extend table.metadata
+  th
+    @include no-select
+  td.r
+    text-align: right
+
 #header a
   &.root
     text-decoration: none
@@ -161,10 +184,18 @@ table.sortable
     background-color: yellow
 
 input[type=checkbox], label
+  @include no-select
   cursor: pointer
-  -webkit-user-select: none
-  -khtml-user-select: none
-  -moz-user-select: none
-  -o-user-select: none
-  user-select: none
 
+table.index
+  td.size
+    text-align: right
+    white-space: pre
+  td.type
+    padding-left: 1.5em
+    font-size: 10pt
+    color: gray
+
+div.summary
+  color: gray
+  margin-top: 0.6em

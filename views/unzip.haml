@@ -1,0 +1,33 @@
+%table.unzip.sortable
+  %thead
+    %tr
+      %th #
+      %th name
+      %th size
+      %th(title="compressed size") csize
+      %th method
+      %th crc
+      %th time
+      - if @files.any?(&:comment)
+        %th comment
+  %tbody
+    - @files.each do |f|
+      %tr
+        %td.r= f.index
+        %td=   f.name
+        %td.r= f.size
+        %td.r= f.comp_size
+        %td
+          = comp_method_name f.comp_method
+          - if f.encryption_method != 0
+            %strong(title="encryption method")= "e: #{f.encryption_method}"
+        %td= "%08x" % f.crc
+        %td= f.mtime.strftime("%Y-%m-%d %H:%M:%S")
+        - if f.comment
+          %td= f.comment.inspect
+        %td.tools
+          %a.analyze(title="analyze" href="/#{@hash}/unzip/#{f.index}/analyze")
+
+.summary= "#{@files.size} file(s), #{number_to_human_size(@files.map(&:size).inject(&:+))}"
+
+%script(type="text/javascript" src="/js/sorttable.js")

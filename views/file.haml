@@ -105,6 +105,9 @@
       %a(href="#info") info
     %li
       %a(href="/#{@hash}/foremost" title="foremost") foremost
+    - if @metadata[:mimetype] == "application/zip"
+      %li
+        %a(href="/#{@hash}/unzip" title="unzip") unzip
     %li
       %a(href="#hexdump") hexdump
     %li

@@ -18,18 +18,12 @@
           %span{:class => h(row[0]).strip.downcase}= h row[0]
         %td.comment= h row[3]
         %td.tools<
+          %a.analyze{ :title => "analyze", :href => url_for(params[:hash], :analyze_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
           %a.dl{ :title => "download", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
-          %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},#{row[1]})" }
+          %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},Math.min(#{row[1]},0x20000))" }
           %a.open{ :title => "open", :target => "_blank", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase, :inline => 1) } #
 
 #previews
-  -# @foremost.find_all{|x| @image_types.include?(x[0])}.each do |row|
-    .thumb
-      %img{ |
-        :src   => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase), |
-        :title => "#{row[2].to_s(16)}-#{row[1]}.#{row[0].downcase}", |
-        :alt   => "#{row[2].to_s(16)}-#{row[1]}.#{row[0].downcase}" |
-      } |
 
 %script(type="text/javascript" src="/js/sorttable.js")
 

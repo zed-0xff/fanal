@@ -20,9 +20,10 @@
       %td(colspan=2 align="center")
         %input(type="submit")
 
-%table
+%table.index
   - @recent.each do |metadata|
     %tr
       %td 
-        %a(href="#{metadata[:md5]}/")= metadata[:filename]
-      %td(align="right")= number_to_human_size metadata[:size]
+        %a(href="#{metadata[:md5]}/")= metadata[:filename] || "??"
+      %td.size= number_to_human_size metadata[:size]
+      %td.type= metadata[:type].split(',',2).first
