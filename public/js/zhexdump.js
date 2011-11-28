@@ -18,47 +18,69 @@ var ZHexDump = {
   dump: function(){
     this.dump_to(this.last_target);
   },
- 
+
+  fmt_addr: function(offset){
+    addr = (offset+this.offset).toString(16);
+    switch(addr.length){ // trying to optimize for speed
+      case 0: addr="00000000"+addr; break;
+      case 1: addr="0000000"+addr; break;
+      case 2: addr="000000"+addr; break;
+      case 3: addr="00000"+addr; break;
+      case 4: addr="0000"+addr; break;
+      case 5: addr="000"+addr; break;
+      case 6: addr="00"+addr; break;
+      case 7: addr="0"+addr; break;
+    }
+    return addr;
+  },
+
   dump_to: function(target_el){
     var r = '';
     var data = this.data;
-    var offset,j,c,s;
+    var offset,j,c,addr;
     var width = this.width;
     var ascii = "";
+    var hexline, hexline0 = "";
 
     this.last_target = target_el;
 
     for(offset=0; offset<data.length; offset+=width){
-      s = (offset+this.offset).toString(16);
-      switch(s.length){ // trying to optimize for speed
-        case 0: s="00000000"+s; break;
-        case 1: s="0000000"+s; break;
-        case 2: s="000000"+s; break;
-        case 3: s="00000"+s; break;
-        case 4: s="0000"+s; break;
-        case 5: s="000"+s; break;
-        case 6: s="00"+s; break;
-        case 7: s="0"+s; break;
+      addr = (offset+this.offset).toString(16);
+      switch(addr.length){ // trying to optimize for speed
+        case 0: addr="00000000"+addr; break;
+        case 1: addr="0000000"+addr; break;
+        case 2: addr="000000"+addr; break;
+        case 3: addr="00000"+addr; break;
+        case 4: addr="0000"+addr; break;
+        case 5: addr="000"+addr; break;
+        case 6: addr="00"+addr; break;
+        case 7: addr="0"+addr; break;
       }
-      r += s + ":  ";
 
       c = data.charCodeAt(offset) & 0xff;
-      r += (c<0x10 ? '0' : '') + c.toString(16) + " ";
+      hexline = (c<0x10 ? '0' : '') + c.toString(16) + " ";
       ascii = (c>0x1f && c<0x7f) ? data[offset] : ".";
 
       for(j=1;j<width;j++){
-        if(j%8 == 0) r+=' ';
+        if(j%8 == 0) hexline += ' ';
         c = data.charCodeAt(offset+j);
         if(isNaN(c)){
-          r += '   '; ascii += ' ';
+          hexline += '   '; ascii += ' ';
         } else {
           c &= 0xff;
-          r += (c<0x10 ? '0' : '') + c.toString(16) + " ";
+          hexline += (c<0x10 ? '0' : '') + c.toString(16) + " ";
           ascii += (c>0x1f && c<0x7f) ? data[offset+j] : ".";
         }
       }
-      r += " |" + ascii + "|\n";
+      if( hexline == hexline0 ){
+        if(r.charAt(r.length-2) != '*') r += "*\n";
+      } else {
+        r += this.fmt_addr(offset) + ":  " + hexline + " |" + ascii + "|\n";
+      }
+      hexline0 = hexline;
     }
+
+    if(r.substr(-2) == "*\n") r += this.fmt_addr(offset) + ":";
 
     $(target_el).text(r);
   },
