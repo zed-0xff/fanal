@@ -107,5 +107,8 @@ var ZHexDump = {
     $('#hexdump .info .offset_hex').text(this.offset.toString(16));
     $('#hexdump .info .size'      ).text(this.data.length);
     $('#hexdump .info .size_hex'  ).text(this.data.length.toString(16));
+    $('#hexdump .info a.dl'       ).attr('href',
+      "/"+current_file_hash+"/dl_part?start="+this.offset+"&size="+this.data.length+"&ext=bin"
+    );
   }
 };

@@ -5,6 +5,8 @@
   -o-user-select: none
   user-select: none
 
+$image-extension-color: #0b0
+
 body
   font-family: Verdana
   font-size: 9pt
@@ -99,7 +101,7 @@ a.open
       font-weight: bold
       font-size: 10pt
       .gif, .jpg, .png, .bmp
-        color: #0b0
+        color: $image-extension-color
     td.comment
       color: #ccc
       padding-left: 1em
@@ -134,8 +136,9 @@ table.unzip
   @extend table.metadata
   th
     @include no-select
-  td.r
-    text-align: right
+
+td.r
+  text-align: right
 
 #header a
   &.root
@@ -199,3 +202,68 @@ table.index
 div.summary
   color: gray
   margin-top: 0.6em
+
+div.pe
+  column-count: 2
+  -webkit-column-count: 2
+  -moz-column-count: 2
+  .block
+    clear: both
+    break-inside: avoid
+    column-break-inside: avoid
+    -webkit-break-inside: avoid
+    -webkit-column-break-inside: avoid
+    -moz-break-inside: avoid
+    -moz-column-break-inside: avoid
+    h3
+      float: left
+      cursor: pointer
+    > a.hex
+      margin-left: 2em
+      margin-top: 17px
+    pre
+      clear: both
+    table.metadata
+      clear: both
+      width: 27em
+      break-inside: avoid
+      column-break-inside: avoid
+      -webkit-break-inside: avoid
+      -webkit-column-break-inside: avoid
+      -moz-break-inside: avoid
+      -moz-column-break-inside: avoid
+      th
+        text-align: center
+        font-family: Monospace
+        font-weight: bold
+      td.tools
+        width: 33px
+      td.tools
+        a.dl
+          margin-left: 1px
+    .resources
+      .bitmap, .icon, .cursor
+        color: $image-extension-color
+    #previews
+      display: none
+      float: left
+      .thumb
+        float: left
+        width: 100px
+        height: 100px
+        border: solid 1px #ddd
+        margin: 1px
+        div
+          width: 100px
+          height: 100px
+          display: table-cell
+          vertical-align: middle
+          text-align: center
+          img
+            max-width: 100px
+            max-height: 100px
+
+i.hex
+  color: #bbb
+  font-style: normal
+  font-size: 80%

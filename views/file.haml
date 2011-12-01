@@ -1,4 +1,5 @@
 :javascript
+  var current_file_hash = "#{@hash}";
   $(function(){
     $('#tabs').tabs({
       cache: true,
@@ -94,7 +95,7 @@
   });
 
   function show_in_hexdump(offset,size){
-    ZHexDump.load(offset,size);
+    ZHexDump.load(offset,Math.min(0x20000,size));
     $('#tabs').tabs('select','#hexdump');
     $(window).scrollTop(0);
   }
@@ -108,6 +109,9 @@
     - if @metadata[:mimetype] == "application/zip"
       %li
         %a(href="/#{@hash}/unzip" title="unzip") unzip
+    - if @metadata[:type].to_s.start_with?('PE32')
+      %li
+        %a(href="/#{@hash}/pe" title="pe") PE
     %li
       %a(href="#hexdump") hexdump
     %li
@@ -123,6 +127,7 @@
 
   #hexdump
     .info
+      %a.dl(style="position: absolute; left: 40em" title="download current block")
       offset:
       %span.offset(contentEditable='true')
       ( 0x

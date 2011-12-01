@@ -20,7 +20,7 @@
         %td.tools<
           %a.analyze{ :title => "analyze", :href => url_for(params[:hash], :analyze_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
           %a.dl{ :title => "download", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase) }
-          %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},Math.min(#{row[1]},0x20000))" }
+          %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{row[2]},#{row[1]})" }
           %a.open{ :title => "open", :target => "_blank", :href => url_for(params[:hash], :dl_part, :start => row[2], :size => row[1], :ext => row[0].downcase, :inline => 1) } #
 
 #previews
@@ -29,14 +29,12 @@
 
 :javascript
   var image_types = #{@image_types.to_json};
-  var previews_loaded = false;
   var foremost_data = #{@foremost.to_json};
   var url_tpl = #{url_for(params[:hash], :dl_part, :start => 'START', :size => 'SIZE', 
     :ext => 'EXT', :inline => 1).to_json};
   var row;
   function toggle_previews(chk){
     if(chk.checked){
-      previews_loaded = true;
       var html = "",alt,url;
       for(var i=0; i<foremost_data.length; i++){
         row = foremost_data[i];

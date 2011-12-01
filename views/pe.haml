@@ -1,0 +1,145 @@
+.pe
+  .block
+    %h3 MZ Header
+    %a.hex{ :title   => "show in hexdump", 
+            :onclick => "show_in_hexdump(0,#{PEDump::MZ::SIZE})" }
+    %table.metadata
+      - @dump.mz.each_pair do |k,v|
+        %tr
+          %td= h k
+          %td.r= h v
+
+  .block
+    %h3 DOS stub
+    %a.hex{ :title   => "show in hexdump", 
+            :onclick => "show_in_hexdump(#{@dump.dos_stub.offset},#{@dump.dos_stub.size})" }
+    %pre= hexdump @dump.dos_stub, :width => 12
+
+  - if @dump.rich_hdr
+    .block
+      %h3 Rich Header
+      %a.hex{ :title   => "show in hexdump", 
+              :onclick => "show_in_hexdump(#{@dump.rich_hdr.offset},#{@dump.rich_hdr.size})" }
+      %table.metadata
+        %tr
+          %th lib id
+          %th version
+          %th times used
+        - @dump.rich_header.decode.each do |r|
+          %tr
+            %td.r= r.id
+            %td.r= r.version
+            %td.r= r.times
+
+  .block
+    %h3 PE Header
+    %table.metadata
+      %tr
+        %td Signature
+        %td.r= h @dump.pe.signature
+      - (@dump.pe.ifh.each_pair.to_a + @dump.pe.ioh.each_pair.to_a).each do |k,v| next if k == :DataDirectory
+        %tr
+          %td= h k
+          - if v.is_a?(Numeric)
+            %td.r= hex v
+          - elsif v.is_a?(Time)
+            %td.r= v.strftime("%Y-%m-%d %H:%M:%S")
+          - else
+            %td= h v
+
+  .block
+    %h3 PE Data Directory
+    %table.metadata
+      %tr
+        %th type
+        %th va
+        %th size
+      - @dump.pe.ioh.DataDirectory.each do |de| next if de.empty?
+        %tr
+          %td= h de.type
+          %td.r= hex de.va
+          %td.r= hex de.size
+          %td.tools
+            - if de.va != 0 || de.size != 0
+              %a.hex{ :title   => "show in hexdump", 
+                      :onclick => "show_in_hexdump(#{@dump.va2file(de.va)},#{de.size})" }
+  .block
+    %h3 PE Sections
+    %table.metadata
+      %tr
+        %th name
+        %th va
+        %th vsize
+        %th raw size
+        %th flags
+      - @dump.pe.section_table.each do |s|
+        %tr
+          %td= h s.Name
+          %td.r= hex s.VirtualAddress
+          %td.r= hex s.VirtualSize
+          %td.r= hex s.SizeOfRawData
+          %td{title: s.flags.to_s(16)}= h s.flags_desc
+          %td.tools
+            %a.hex{ :title   => "show in hexdump", 
+                    :onclick => "show_in_hexdump(#{s.PointerToRawData},#{s.SizeOfRawData})" }
+  .block
+    %h3 Resources
+    %span(style="display:inline-block; margin-top: 15px; margin-left: 2em")
+      %input#pe_previews(type="checkbox" onclick="toggle_pe_previews(this)")
+      %label(for="pe_previews") show previews
+    %div.resources
+      #previews
+      %table.metadata
+        %tr
+          %th type
+          %th name
+          %th size
+          - if( was_any_codepage = @dump.resources.any?{ |r| r.cp != 1252 })
+            %th(title="codepage") cp
+          - if( was_any_reserved = @dump.resources.any?{ |r| r.reserved != 0 })
+            %th(title="reserved") r
+        - @dump.resources.each do |r|
+          %tr
+            %td{class: r.type.downcase}= h r.type
+            %td= h r.name
+            %td.r= h r.size
+            - if was_any_codepage
+              %td.r= h r.cp
+            - if was_any_reserved
+              %td.r= h r.reserved
+            %td.tools
+              %a.hex{ :title => "show in hexdump", :onclick => "show_in_hexdump(#{r.file_offset},#{r.size})" }
+              %a.dl{ :title => "download", :href => url_for(params[:hash], :dl_part, :start => r.file_offset, :size => r.size, :ext => "bin") }
+
+:javascript
+  $(function(){
+    $('.pe h3').click(function() {
+      if(!$(this).next().toggle('fast').hasClass('metadata')){
+        $(this).next().next().toggle('fast');
+      }
+      return false;
+    });
+  });
+  function toggle_pe_previews(chk){
+    var pe_bitmaps = #{@dump.resources.
+      find_all{ |x| %w'BITMAP ICON CURSOR'.include?(x.type) }.
+      map{|x| [x.file_offset, x.size, x.type]}.to_json};
+    var url_tpl = #{url_for(params[:hash], :dl_part, :start => 'START', :size => 'SIZE', 
+      :ext => 'bmp', :inline => 1, :f => 'FLT').to_json};
+    if(chk.checked){
+      var html = "",alt,url;
+      for(var i=0; i<pe_bitmaps.length; i++){
+        row = pe_bitmaps[i];
+        alt = row[0].toString(16) + "-" + row[1] + ".bmp";
+        url = url_tpl.
+            replace('START',row[0]).
+            replace('SIZE', row[1]).
+            replace('FLT',  row[2]);
+        html += "<div class=\"thumb\" title=\""+alt+"\"><div><a target=\"_blank\" href=\""+url+
+          "\"><img src=\""+url+"\" alt=\""+alt+"\"/></a></div></div>";
+      }
+      $('div.resources #previews').html(html).show();
+    } else {
+      $('div.resources #previews').hide();
+    }
+  }

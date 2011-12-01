@@ -24,6 +24,11 @@ helpers do
     include HexdumpHelper
     include UnzipHelper
 
+    def hex x
+      x = x.to_i
+      x < 10 ? x : ("<i class='hex'>0x</i>%x" % x)
+    end
+
     def meta_rows
       keys = @metadata.keys
       if @metadata[:parent]
@@ -306,12 +311,24 @@ end
 
 get '/:hash/dl_part' do
   check_part
+
+  data = nil
+  case params[:f]
+  when 'BITMAP','CURSOR', 'ICON'
+    res  = PEDump::Resource.new(params[:f],"0",@part_start,@part_size)
+    data = res.restore_bitmap(@fname)
+    @part_size = data.size
+  end
+
   headers \
     "Content-Disposition" => (params[:inline] ? "inline" : "attachment") + %Q|; filename="#@part_fname"|,
     "Content-Length"      => @part_size.to_s,
     "Content-Type"        => (MIME::Types.of(@part_fname).first || "application/octet-stream").to_s
 
+  halt data if data
+
   stream do |out|
+    out << prepend unless prepend.empty?
     File.open(@fname,"rb") do |f|
       f.seek @part_start
       while @part_size > 0
@@ -372,4 +389,10 @@ get '/:hash/unzip/:id/analyze' do
     f.close rescue nil
   end
   halt "OK"
+end
+
+get '/:hash/pe' do
+  check_hash
+  @dump = PEDump.dump(@fname)
+  haml :pe, :layout => !request.xhr?
 end

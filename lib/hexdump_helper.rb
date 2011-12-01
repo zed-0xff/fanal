@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 module HexdumpHelper
   def hexdump data, h = {}
     offset = h[:offset] || 0
@@ -21,13 +23,14 @@ module HexdumpHelper
       s << "%02x " % c
       ascii << ((32..126).include?(c) ? c.chr : '.')
     end
-    r << "%-*s |%-*s|%s" % [width*3+width/8, s, width, ascii, tail]
+    r << "%-*s |%-*s|%s" % [width*3+width/8+(width%8==0?0:1), s, width, ascii, tail]
   end
 end
 
 if $0 == __FILE__
   include HexdumpHelper
+  width = (ARGV.first || 16).to_i
   (0..0x22).each do |n|
-    puts hexdump("X"*n, :tail => " 0x%02x" % n)
+    puts hexdump("X"*n, :tail => " 0x%02x" % n, :width => width)
   end
 end
