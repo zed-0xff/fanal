@@ -45,11 +45,15 @@
       %tr
         %td Signature
         %td.r= h @dump.pe.signature
-      - (@dump.pe.ifh.each_pair.to_a + @dump.pe.ioh.each_pair.to_a).each do |k,v| next if k == :DataDirectory
+      - (@dump.pe.ifh.each_pair.to_a + @dump.pe.ioh.each_pair.to_a).each do |k,v|
+        - next if k == :DataDirectory || k.to_s['Minor']
         %tr
-          %td= h k
+          %td= h k.to_s.sub('Major','')
           - if v.is_a?(Numeric)
-            %td.r= hex v
+            - if k.to_s['Major']
+              %td.r= "#{v}.#{@dump.pe.ioh[k.to_s.sub('Major','Minor')]}"
+            - else
+              %td.r= hex v
           - elsif v.is_a?(Time)
             %td.r= v.strftime("%Y-%m-%d %H:%M:%S")
           - else
