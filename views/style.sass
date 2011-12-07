@@ -218,9 +218,12 @@ div.pe
     h3
       float: left
       cursor: pointer
-    > a.hex
+    > .tools
       margin-left: 2em
       margin-top: 17px
+      display: inline-block
+      a
+        margin-right: 4px
     pre
       clear: both
     table.metadata
@@ -241,6 +244,8 @@ div.pe
       td.tools
         a.dl
           margin-left: 1px
+      td.flags
+        min-width: 10em
     .resources
       .bitmap, .icon, .cursor
         color: $image-extension-color

@@ -6,6 +6,7 @@ require 'json'
 require 'net/http'
 require 'mime/types'
 require 'zipruby'
+require 'pedump'
 
 Dir['./lib/*.rb'].each{ |x| require x }
 
@@ -305,7 +306,11 @@ def check_part
   @part_size,@part_start = part_size,part_start
 
   @metadata = YAML::load_file(File.join(@dname,"metadata.yml")) || {}
-  @part_fname = "#{@metadata[:filename]}:#@part_start:#@part_size"
+  if params[:suffix] && params[:suffix] =~ /\A[a-z_]+\Z/
+    @part_fname = "#{@metadata[:filename]}.#{params[:suffix]}"
+  else
+    @part_fname = "#{@metadata[:filename]}:#@part_start:#@part_size"
+  end
   @part_fname << '.' << params[:ext] if params[:ext].to_s =~ /\A[a-z0-9]{1,4}\Z/
 end
 
@@ -315,7 +320,7 @@ get '/:hash/dl_part' do
   data = nil
   case params[:f]
   when 'BITMAP','CURSOR', 'ICON'
-    res  = PEDump::Resource.new(params[:f],"0",@part_start,@part_size)
+    res  = PEdump::Resource.new(params[:f],"0",@part_start,@part_size)
     data = res.restore_bitmap(@fname)
     @part_size = data.size
   end
@@ -328,7 +333,6 @@ get '/:hash/dl_part' do
   halt data if data
 
   stream do |out|
-    out << prepend unless prepend.empty?
     File.open(@fname,"rb") do |f|
       f.seek @part_start
       while @part_size > 0
@@ -393,6 +397,6 @@ end
 
 get '/:hash/pe' do
   check_hash
-  @dump = PEDump.dump(@fname)
+  @dump = PEdump.dump(@fname)
   haml :pe, :layout => !request.xhr?
 end

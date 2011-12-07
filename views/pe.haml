@@ -1,8 +1,9 @@
 .pe
   .block
     %h3 MZ Header
-    %a.hex{ :title   => "show in hexdump", 
-            :onclick => "show_in_hexdump(0,#{PEDump::MZ::SIZE})" }
+    .tools
+      %a.hex{ :title   => "show in hexdump", 
+              :onclick => "show_in_hexdump(0,#{PEdump::MZ::SIZE})" }
     %table.metadata
       - @dump.mz.each_pair do |k,v|
         %tr
@@ -11,15 +12,22 @@
 
   .block
     %h3 DOS stub
-    %a.hex{ :title   => "show in hexdump", 
-            :onclick => "show_in_hexdump(#{@dump.dos_stub.offset},#{@dump.dos_stub.size})" }
+    .tools
+      %a.hex{ :title   => "show in hexdump", 
+              :onclick => "show_in_hexdump(#{@dump.dos_stub.offset},#{@dump.dos_stub.size})" }
+      %a.dl{  :title   => "download", 
+              :href    => url_for(params[:hash], :dl_part, 
+                :start  => @dump.dos_stub.offset, 
+                :size   => @dump.dos_stub.size, 
+                :suffix => 'dos_stub', :ext => "bin") }
     %pre= hexdump @dump.dos_stub, :width => 12
 
   - if @dump.rich_hdr
     .block
       %h3 Rich Header
-      %a.hex{ :title   => "show in hexdump", 
-              :onclick => "show_in_hexdump(#{@dump.rich_hdr.offset},#{@dump.rich_hdr.size})" }
+      .tools
+        %a.hex{ :title   => "show in hexdump", 
+                :onclick => "show_in_hexdump(#{@dump.rich_hdr.offset},#{@dump.rich_hdr.size})" }
       %table.metadata
         %tr
           %th lib id
@@ -63,7 +71,7 @@
             - if de.va != 0 || de.size != 0
               %a.hex{ :title   => "show in hexdump", 
                       :onclick => "show_in_hexdump(#{@dump.va2file(de.va)},#{de.size})" }
-  .block
+  .block.sections
     %h3 PE Sections
     %table.metadata
       %tr
@@ -78,7 +86,7 @@
           %td.r= hex s.VirtualAddress
           %td.r= hex s.VirtualSize
           %td.r= hex s.SizeOfRawData
-          %td{title: s.flags.to_s(16)}= h s.flags_desc
+          %td.flags{title: s.flags.to_s(16)}= h s.flags_desc
           %td.tools
             %a.hex{ :title   => "show in hexdump", 
                     :onclick => "show_in_hexdump(#{s.PointerToRawData},#{s.SizeOfRawData})" }
